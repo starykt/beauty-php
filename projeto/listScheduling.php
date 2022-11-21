@@ -1,0 +1,122 @@
+<?php
+require_once('connection.php');
+
+$data = isset($_GET["data"]) ? $_GET["data"] : "";
+if($data == "") {
+  $consulta = $connection->query("SELECT agendamento.*, cliente.nome, (servico.nome) as servicoNome, (servico.valor) as servicoValor FROM agendamento INNER JOIN cliente ON cliente.idCliente = agendamento.idCliente INNER JOIN servico ON servico.idServico = agendamento.idServico WHERE agendamento.data = CURRENT_DATE();");
+}else {
+  $consulta = $connection->query("SELECT agendamento.*, cliente.nome, (servico.nome) as servicoNome, (servico.valor) as servicoValor FROM agendamento INNER JOIN cliente ON cliente.idCliente = agendamento.idCliente INNER JOIN servico ON servico.idServico = agendamento.idServico WHERE agendamento.data = '$data';");
+  
+}
+?>
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Agendamentos</title>
+</head>
+<?php
+include "head.php";
+?>
+
+<body
+  class="wave"
+  style="text-align: center;">
+  <?php
+    include "header.php";
+  ?>
+  <div
+    class="telinha"
+    style="display: inline-block;"
+    >
+      <div class="total-opcoes">
+        <a
+          href="insertClient.php">
+          <button
+            type="button"
+            class="btn-cadastrar">
+              Novo agendamento
+          </button>
+        </a>
+        <input
+          type="text"
+          id="search"
+          name="search"
+          placeholder="Buscar  ">
+    </div> <br>
+
+    <h4>Clientes</h4> <br>
+
+    <div class="tabelinha">
+      <table id="table">
+        <tr class="table-title">
+          <td>Nome</td>
+          <td>CPF</td>
+          <td>Endereço</td>
+          <td>Telefone</td>
+          <td>Ação</td>
+        </tr>
+        <?php
+        while ($linha = $consulta->fetch(PDO::FETCH_ASSOC)) {
+        ?>
+          <tr></tr>
+          <td><?php echo $linha['nome']; ?></td>
+          <td><?php echo $linha['cpf']; ?></td>
+          <td><?php echo $linha['endereco']; ?></td>
+          <td><?php echo $linha['telefone']; ?></td>
+          <td>
+            <a href="editClient.php?idCliente=
+                <?php echo $linha['idCliente']; ?>
+              ">
+              <button type="button" class="btn-editar">
+                Editar
+              </button>
+            </a>
+            <button type="button" class="btn-excluir" onclick="excluir(
+                <?php echo $linha['idCliente']; ?>
+              )">
+              Excluir
+            </button>
+          </td>
+          </tr>
+        <?php
+        }
+        ?>
+      </table>
+    </div>
+  </div>
+  <script>
+    function excluir(id) {
+      Swal.fire({
+        title: 'Tem certeza?',
+        text: "Excluir esse cliente é uma ação irreverssivel!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: "Não",
+        confirmButtonText: 'Sim!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = `deleteClient.php?idCliente=${id}`;
+        }
+      })
+    }
+
+    $("#search").keyup(function() {
+      var value = this.value.toLowerCase().trim();
+      $("#table tr").each(function(index) {
+        if (!index) return;
+        $(this).find("td").each(function() {
+          var id = $(this).text().toLowerCase().trim();
+          var not_found = (id.indexOf(value) == -1);
+          $(this).closest('tr').toggle(!not_found);
+          return not_found;
+        });
+      });
+    })
+  </script>
+</body>
+
+</html>
